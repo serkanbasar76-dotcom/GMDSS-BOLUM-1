@@ -9,7 +9,7 @@ st.markdown("""
     <style>
     .stApp { background-color: #f4f7f9; }
     .stButton>button {
-        width: 150%;
+        width: 100%;
         border-radius: 12px;
         border: 1px solid #1e3a8a;
         background-color: white;
@@ -25,7 +25,7 @@ st.markdown("""
         transform: translateY(-2px);
     }
     .logo-container { text-align: center; padding: 20px; }
-    .SERKAN HOCA { font-size: 36px; font-weight: 800; color: #1e3a8a; margin-bottom: 0px; }
+    .serkan hoca { font-size: 36px; font-weight: 800; color: #1e3a8a; margin-bottom: 0px; }
     .sub-title { font-size: 18px; color: #64748b; margin-top: -10px; }
     </style>
     """, unsafe_allow_html=True)
