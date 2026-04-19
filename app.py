@@ -1,5 +1,6 @@
 import streamlit as st
 import random
+import time
 
 # --- SAYFA AYARLARI ---
 st.set_page_config(page_title="GMDSS Sınav Sistemi", page_icon="⚓", layout="centered")
@@ -11,28 +12,10 @@ st.markdown("""
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
     .stApp { background-color: #0E1117; color: #FFFFFF; }
     
-    .main-header {
-        font-size: 26px !important;
-        font-weight: 800;
-        color: #FFFFFF;
-        text-align: center;
-        margin-bottom: 0px;
-        letter-spacing: 2px;
-    }
-    .serkan-hoca {
-        font-size: 18px !important;
-        font-weight: 600;
-        color: #58a6ff;
-        text-align: center;
-        margin-top: -5px;
-        margin-bottom: 10px;
-    }
-    .question-header {
-        font-size: 14px;
-        color: #8b949e;
-        text-align: center;
-        margin-bottom: 5px;
-    }
+    .main-header { font-size: 24px !important; font-weight: 800; color: #FFFFFF; text-align: center; margin-bottom: 0px; }
+    .serkan-hoca { font-size: 16px !important; font-weight: 600; color: #58a6ff; text-align: center; margin-top: -5px; margin-bottom: 10px; }
+    .question-header { font-size: 14px; color: #8b949e; text-align: center; margin-bottom: 5px; }
+    
     .question-box {
         background-color: #161B22;
         padding: 12px 18px;
@@ -42,6 +25,17 @@ st.markdown("""
         line-height: 1.4;
         margin-bottom: 10px;
     }
+    
+    /* Büyük Skor Yazısı */
+    .big-score {
+        font-size: 72px !important;
+        font-weight: 900;
+        color: #58a6ff;
+        text-align: center;
+        margin: 20px 0;
+    }
+    .score-label { font-size: 20px; color: #8b949e; text-align: center; margin-bottom: -10px; }
+
     /* Şık Butonları */
     .stButton>button {
         width: 100%;
@@ -52,16 +46,16 @@ st.markdown("""
         padding: 6px 12px;
         font-size: 14px;
         text-align: left;
-        margin-bottom: -10px; /* Dikey boşluğu daraltır */
+        margin-bottom: -12px;
         transition: 0.1s;
     }
     .stButton>button:hover { background-color: #3060d0; border-color: #58a6ff; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- VERİ SETİ (DOKÜMANDAKİ TÜM SORULAR) ---
+# --- VERİ SETİ (40 SORU TAMAMI) ---
 RAW_DATA = [
-    {"q": "SÜZEN sözcüğü, uluslararası heceleme (fonetik) alfabesi ile nasıl kodlanır?", "a": "Sierra UniformZuluEchoNovember", "options": ["Sette Ultra ZuluEndoNovember", "South Ultra ZouluoEleven North", "Sierra UniformZuluEchoNovember", "Sierra UniformZuluEndoNove", "Sette UniformZouluoEicoNovember"]},
+    {"q": "SÜZEN sözcüğü, uluslararası fonetik alfabesi ile nasıl kodlanır?", "a": "Sierra UniformZuluEchoNovember", "options": ["Sette Ultra ZuluEndoNovember", "South Ultra ZouluoEleven North", "Sierra UniformZuluEchoNovember", "Sierra UniformZuluEndoNove", "Sette UniformZouluoEicoNovember"]},
     {"q": "ETAT ücretli servis işaretinin anlamı nedir?", "a": "Devlet telgrafı", "options": ["Servis telgrafı", "Postrestant telgraf", "Denizcilikle ilgili telgraf", "Devlet telgrafı", "Acele telgraf"]},
     {"q": "Nomanklatürlerde geçen 'CO' kısaltmasının anlamı nedir?", "a": "Yalnız resmi bir kuruluşun haberleşmesini yapan istasyon", "options": ["Anten ayarı", "Kıyı uydu yer istasyonu", "Yalnız resmi bir kuruluşun haberleşmesini yapan istasyon", "Tarihinde iptal edildi", "Uzay istasyonu"]},
     {"q": "Emisyon sembolünde ilk karakterin 'B' olması neyi tanımlar?", "a": "İki bağımsız yan band", "options": ["Tek yan band bastırılmış taşıyıcı", "İki bağımsız yan band", "Faz modülasyonlu tek yan band", "Çift yan band", "Tek yan band azaltılmış taşıyıcı"]},
@@ -100,95 +94,86 @@ RAW_DATA = [
     {"q": "VHF telsiz cihazının azami çıkış gücü nedir?", "a": "25 Watt", "options": ["1 Watt", "5 Watt", "25 Watt", "100 Watt", "1.5 kW"]},
     {"q": "VHF CH 16 frekansı nedir?", "a": "156.800 MHz", "options": ["156.300 MHz", "156.525 MHz", "156.800 MHz", "156.650 MHz", "161.975 MHz"]},
     {"q": "EPIRB cihazı suyun kaç metre altında otomatik açılır?", "a": "1.5 - 4 metre", "options": ["1 metre", "1.5 - 4 metre", "10 metre", "20 metre", "Serbest kalmaz"]},
-    {"q": "Telsiz operatörü DSC test çağrısını kime yapar?", "a": "Sahil istasyonuna (RCC)", "options": ["Herhangi bir gemiye", "Sahil istasyonuna (RCC)", "Kendi gemisine", "Tanıdık bir tekneye", "Test çağrısı yapılmaz"]}
+    {"q": "GMDSS telsiz istasyonunun yedek enerji kaynağı (aküler) en az ne kadar süre çalışabilmelidir?", "a": "1 saat veya 6 saat (Acil jeneratör durumuna göre)", "options": ["1 saat veya 6 saat (Acil jeneratör durumuna göre)", "24 saat", "48 saat", "12 saat", "30 dakika"]}
 ]
 
-# --- DENGELİ CEVAP ANAHTARI ALGORİTMASI (%20 DAĞILIM) ---
-def build_balanced_quiz(data):
-    shuffled = random.sample(data, len(data))
-    # Her harf için eşit slot (40 soru / 5 harf = 8'er adet)
+# --- DENGELİ DAĞILIM VE SİSTEM BAŞLATMA ---
+def init_quiz():
+    shuffled = random.sample(RAW_DATA, len(RAW_DATA))
     slots = (["A"] * 8) + (["B"] * 8) + (["C"] * 8) + (["D"] * 8) + (["E"] * 8)
     random.shuffle(slots)
-    
     quiz = []
     for i, item in enumerate(shuffled):
         correct = item["a"]
         wrongs = [o for o in item["options"] if o != correct]
         random.shuffle(wrongs)
-        
         final_opts = [None] * 5
         target_idx = ord(slots[i]) - 65
         final_opts[target_idx] = correct
-        
         w_ptr = 0
         for j in range(5):
             if final_opts[j] is None:
                 final_opts[j] = wrongs[w_ptr]
                 w_ptr += 1
-        
         item_copy = item.copy()
         item_copy["options"] = final_opts
         quiz.append(item_copy)
     return quiz
 
-# --- SESSION STATE ---
-if 'st' not in st.session_state:
-    st.session_state.quiz = build_balanced_quiz(RAW_DATA)
+if 'quiz' not in st.session_state:
+    st.session_state.quiz = init_quiz()
     st.session_state.idx = 0
     st.session_state.results = []
     st.session_state.done = False
-    st.session_state.st = True
+    st.session_state.start_time = time.time()
 
 # --- ARA YÜZ ---
 st.markdown('<p class="main-header">GMDSS SORULARI</p>', unsafe_allow_html=True)
 st.markdown('<p class="serkan-hoca">⚓ SERKAN HOCA İLE</p>', unsafe_allow_html=True)
 
 if not st.session_state.done:
-    # Başlık: SORU 1/40
     st.markdown(f'<p class="question-header">SORU {st.session_state.idx + 1} / {len(RAW_DATA)}</p>', unsafe_allow_html=True)
-    
     curr = st.session_state.quiz[st.session_state.idx]
     st.markdown(f'<div class="question-box">{curr["q"]}</div>', unsafe_allow_html=True)
 
-    # Şıklar A-E
     letters = ["A", "B", "C", "D", "E"]
     for i, opt in enumerate(curr["options"]):
         if st.button(f"{letters[i]}) {opt}", key=f"btn_{st.session_state.idx}_{i}"):
-            st.session_state.results.append({
-                "n": st.session_state.idx + 1,
-                "q": curr["q"],
-                "u": opt,
-                "c": curr["a"]
-            })
+            st.session_state.results.append({"n": st.session_state.idx + 1, "q": curr["q"], "u": opt, "c": curr["a"]})
             if st.session_state.idx + 1 < len(RAW_DATA):
                 st.session_state.idx += 1
+                st.rerun()
             else:
+                st.session_state.end_time = time.time()
                 st.session_state.done = True
-            st.rerun()
+                st.rerun()
 
     st.divider()
-    c1, c2 = st.columns(2)
-    if c1.button("🏠 Kapat / Başa Dön", use_container_width=True):
+    if st.button("🏠 Sınavı Sıfırla", use_container_width=True):
         st.session_state.clear()
         st.rerun()
-    if c2.button("💾 Kaldığım Yerden", use_container_width=True): 
-        st.toast("İlerleme kaydedildi.")
 
 else:
     # --- ANALİZ SAYFASI ---
+    elapsed_time = st.session_state.end_time - st.session_state.start_time
+    minutes = int(elapsed_time // 60)
+    seconds = int(elapsed_time % 60)
+    
     corrects = sum(1 for r in st.session_state.results if r["u"] == r["c"])
     score = (corrects / len(RAW_DATA)) * 100
 
-    if score >= 80:
-        st.balloons()
-        st.success(f"# TEBRİKLER HARİKASIN! 🚀\nBaşarı Oranı: %{score:.1f}")
-    else:
-        st.info(f"Sınav Tamamlandı. Başarı Oranı: %{score:.1f}")
+    st.markdown('<p class="score-label">BAŞARI ORANI</p>', unsafe_allow_html=True)
+    st.markdown(f'<p class="big-score">%{score:.1f}</p>', unsafe_allow_html=True)
     
+    st.markdown(f"<h3 style='text-align: center; color: #8b949e;'>⏱ Toplam Süre: {minutes} dk {seconds} sn</h3>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center;'>40 Soruda {corrects} Doğru Cevap</p>", unsafe_allow_html=True)
+    
+    if score >= 80: st.balloons()
+
     st.subheader("Hata Analizi")
     for r in st.session_state.results:
         if r["u"] != r["c"]:
-            with st.expander(f"Soru {r['n']} - Yanlış ❌"):
+            with st.expander(f"Soru {r['n']} - Hatalı ❌"):
                 st.write(f"**Soru:** {r['q']}")
                 st.error(f"Senin Cevabın: {r['u']}")
                 st.success(f"Doğru Cevap: {r['c']}")
