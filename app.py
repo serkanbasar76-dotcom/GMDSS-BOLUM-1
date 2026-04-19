@@ -107,7 +107,7 @@ RAW_DATA = [
     {"q": "DSC çağrısında 'Urgency' önceliği ne için kullanılır?", "a": "Bir kişi denize düştüyse veya tıbbi aciliyet varsa", "options": ["Gemi batıyorsa", "Bir kişi denize düştüyse veya tıbbi aciliyet varsa", "Fener sönükse", "Gemide boya yapılıyorsa", "Selamlaşma için"]},
     {"q": "VHF telsiz cihazının azami çıkış gücü nedir?", "a": "25 Watt", "options": ["1 Watt", "5 Watt", "25 Watt", "100 Watt", "1.5 kW"]},
     {"q": "VHF CH 16 frekansı nedir?", "a": "156.800 MHz", "options": ["156.300 MHz", "156.525 MHz", "156.800 MHz", "156.650 MHz", "161.975 MHz"]},
-    {"q": "EPIRB cihazı suyun kaç metre altında otomatik açılır?", "a": "1.5 - 4 metre", "options": ["1 metre", "1.5 - 4 metre", "10 metre", "20 metre", "Serbest kalmaz"]},
+    {"q": "Bir EPIRB cihazı suyun kaç metre altında otomatik olarak serbest kalır?", "a": "1.5 - 4 metre", "options": ["1 metre", "1.5 - 4 metre", "10 metre", "20 metre", "Serbest kalmaz"]},
     {"q": "GMDSS telsiz istasyonunun yedek enerji kaynağı (aküler) en az ne kadar süre çalışabilmelidir?", "a": "1 saat veya 6 saat (Acil jeneratör durumuna göre)", "options": ["1 saat veya 6 saat (Acil jeneratör durumuna göre)", "24 saat", "48 saat", "12 saat", "30 dakika"]}
 ]
 
