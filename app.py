@@ -4,57 +4,68 @@ import random
 # --- SAYFA AYARLARI ---
 st.set_page_config(page_title="GMDSS Portal", page_icon="⚓", layout="centered")
 
-# --- GELİŞMİŞ CSS (EKRANA SIĞDIRMA VE MODERN TEMA) ---
+# --- UI OPTİMİZASYONU (EKRANA SIĞDIRMA VE DARK MOD) ---
 st.markdown("""
     <style>
-    /* Arka plan ve genel yazı tipi */
-    .stApp { background-color: #0E1117; color: #E0E0E0; }
+    /* Streamlit üst boşlukları kaldır */
+    .block-container { padding-top: 1rem; padding-bottom: 0rem; max-width: 95%; }
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+
+    /* Arka Plan */
+    .stApp { background-color: #0E1117; color: #FFFFFF; }
     
-    /* Buton Tasarımları */
-    .stButton>button {
-        width: 100%;
-        border-radius: 8px;
-        border: 1px solid #3060d0;
-        background-color: #161B22;
-        color: #FFFFFF;
-        padding: 8px 15px; /* Kompakt yükseklik */
-        margin-bottom: 5px;
-        font-size: 14px;
-        transition: all 0.2s ease;
-        text-align: left;
-    }
-    .stButton>button:hover {
-        border-color: #58a6ff;
-        background-color: #1F2937;
-    }
-    
-    /* Başlık ve Logo */
+    /* Logo ve Başlık */
     .serkan-hoca {
-        font-size: 28px !important;
+        font-size: 24px !important;
         font-weight: 800;
         color: #58a6ff;
         text-align: center;
-        margin-top: -50px;
+        margin-bottom: 5px;
     }
-    
-    /* Soru ve Sayaç Alanı */
+
+    /* Soru Sayacı */
+    .counter {
+        color: #8b949e;
+        text-align: center;
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
+
+    /* Soru Metni - Kompakt */
     .question-box {
         background-color: #161B22;
-        padding: 15px;
-        border-radius: 10px;
-        border-left: 5px solid #58a6ff;
+        padding: 12px;
+        border-radius: 8px;
+        border-left: 4px solid #58a6ff;
+        font-size: 15px;
         margin-bottom: 10px;
+        line-height: 1.4;
     }
-    .counter {
-        font-family: monospace;
-        color: #8b949e;
-        text-align: right;
-        font-size: 18px;
+
+    /* Butonlar - Ekranı Kaplamayan ve İnce */
+    .stButton>button {
+        width: 100%;
+        border-radius: 6px;
+        border: 1px solid #3060d0;
+        background-color: #1c2128;
+        color: #FFFFFF;
+        padding: 6px 10px; 
+        margin-bottom: 0px;
+        font-size: 13px;
+        text-align: left;
+        transition: 0.2s;
+    }
+    .stButton>button:hover {
+        background-color: #3060d0;
+        border-color: #58a6ff;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- VERİ SETİ (40 SORU) ---
+# --- VERİ SETİ (40 SORU - TÜMÜ) ---
+# Not: Hız ve performans için sadece şık metinlerini ve doğru cevabı tutuyoruz.
 RAW_DATA = [
     {"q": "SÜZEN sözcüğü, uluslararası heceleme (fonetik) alfabesi ile nasıl kodlanır?", "a": "Sierra UniformZuluEchoNovember", "options": ["Sette Ultra ZuluEndoNovember", "South Ultra ZouluoEleven North", "Sierra UniformZuluEchoNovember", "Sierra UniformZuluEndoNove", "Sette UniformZouluoEicoNovember"]},
     {"q": "ETAT ücretli servis işaretinin anlamı nedir?", "a": "Devlet telgrafı", "options": ["Servis telgrafı", "Postrestant telgraf", "Denizcilikle ilgili telgraf", "Devlet telgrafı", "Acele telgraf"]},
@@ -66,6 +77,7 @@ RAW_DATA = [
     {"q": "Mevcut Cospas-Sarsat sisteminin bir sonraki nesli hangisidir?", "a": "MEOSAR", "options": ["SZNSAR", "GENSAR", "OTSSAR", "AISSAR", "MEOSAR"]},
     {"q": "AIS 1 kanalının frekansı nedir?", "a": "161.975 MHz", "options": ["156.825 MHz", "161.975 MHz", "162.025 MHz", "156.525 MHz", "156.300 MHz"]},
     {"q": "Tıbbi yardım talebi mesajları hangi öncelik derecesiyle gönderilir?", "a": "Urgency", "options": ["Distress", "Urgency", "Safety", "Routine", "Security"]},
+    # ... (Diğer sorular yukarıdaki 40'lı listeden aynı mantıkla devam eder)
     {"q": "VHF Kanal 70 hangi amaçla kullanılır?", "a": "Dijital Seçmeli Çağrı (DSC)", "options": ["Sesli tehlike çağrısı", "Liman kontrol", "Dijital Seçmeli Çağrı (DSC)", "Meteoroloji", "Gemi içi haberleşme"]},
     {"q": "Navtex cihazı hangi frekanstan uluslararası (İngilizce) yayınları alır?", "a": "518 kHz", "options": ["490 kHz", "518 kHz", "2182 kHz", "4209.5 kHz", "156.8 MHz"]},
     {"q": "GMDSS sisteminde A3 deniz bölgesi neyi tanımlar?", "a": "Inmarsat uydularının kapsama alanı", "options": ["Sadece VHF sahası", "Sadece MF sahası", "Inmarsat uydularının kapsama alanı", "Kutup bölgeleri", "Liman sahaları"]},
@@ -101,15 +113,14 @@ RAW_DATA = [
 # --- SESSION STATE ---
 if 'quiz' not in st.session_state:
     questions = random.sample(RAW_DATA, len(RAW_DATA))
-    # Şıkları da karıştırarak sakla
     for item in questions:
-        random.shuffle(item["options"])
+        random.shuffle(item["options"]) # Şıkları karıştır
     st.session_state.quiz = questions
     st.session_state.idx = 0
     st.session_state.results = []
     st.session_state.done = False
 
-# --- UI ---
+# --- UI GÖSTERİM ---
 st.markdown('<p class="serkan-hoca">⚓ SERKAN HOCA İLE</p>', unsafe_allow_html=True)
 
 def restart_quiz():
@@ -117,17 +128,18 @@ def restart_quiz():
     st.rerun()
 
 if not st.session_state.done:
-    # Sayaç ve Soru 
-    col_a, col_b = st.columns([1, 4])
-    col_a.markdown(f'<p class="counter">{st.session_state.idx + 1} / {len(RAW_DATA)}</p>', unsafe_allow_html=True)
+    # Kompakt Üst Alan
+    st.markdown(f'<p class="counter">Soru {st.session_state.idx + 1} / {len(RAW_DATA)}</p>', unsafe_allow_html=True)
     
     curr = st.session_state.quiz[st.session_state.idx]
-    st.markdown(f'<div class="question-box">{curr["q"]}</div>', unsafe_allow_html=True)
+    # Soru başına numara ekleme
+    st.markdown(f'<div class="question-box">{st.session_state.idx + 1}. SORU: {curr["q"]}</div>', unsafe_allow_html=True)
 
-    # Şıklar (Otomatik Geçiş ve Dinamik Cevap Anahtarı) [cite: 3, 7]
+    # Şıklar - Dikey alanı korumak için 
     for opt in curr["options"]:
         if st.button(opt):
             st.session_state.results.append({
+                "num": st.session_state.idx + 1,
                 "question": curr["q"],
                 "given": opt,
                 "correct": curr["a"]
@@ -138,14 +150,14 @@ if not st.session_state.done:
                 st.session_state.done = True
             st.rerun()
 
-    # Kontrol Paneli
-    st.write("---")
+    # Alt Menü - Çok az yer kaplar
+    st.write("")
     c1, c2 = st.columns(2)
-    if c1.button("🏠 Kapat / Başa Dön"): restart_quiz()
-    if c2.button("💾 Devam Et"): st.toast("Kaldığınız yer korundu.")
+    if c1.button("🏠 Kapat/Sıfırla", use_container_width=True): restart_quiz()
+    if c2.button("💾 Devam Et", use_container_width=True): st.toast("Kaldığınız yer korundu.")
 
 else:
-    # --- ANALİZ SAYFASI ---
+    # --- ANALİZ ---
     correct_total = sum(1 for r in st.session_state.results if r["given"] == r["correct"])
     score = (correct_total / len(RAW_DATA)) * 100
 
@@ -155,14 +167,12 @@ else:
     
     st.metric("BAŞARI ORANI", f"%{score:.1f}")
     
-    # Detaylı Analiz
-    for i, res in enumerate(st.session_state.results):
+    for res in st.session_state.results:
         is_correct = res["given"] == res["correct"]
-        status = "✅" if is_correct else "❌"
-        with st.expander(f"Soru {i+1}: {status}"):
-            st.write(f"**Soru:** {res['question']}")
-            st.write(f"**Senin Cevabın:** {res['given']}")
-            if not is_correct:
-                st.error(f"**Doğru Cevap:** {res['correct']}")
+        if not is_correct:
+            with st.expander(f"Soru {res['num']}: ❌"):
+                st.write(f"**Soru:** {res['question']}")
+                st.error(f"Senin Cevabın: {res['given']}")
+                st.success(f"Doğru Cevap: {res['correct']}")
                 
-    if st.button("Sınavı Tekrar Başlat"): restart_quiz()
+    if st.button("Yeniden Başla"): restart_quiz()
