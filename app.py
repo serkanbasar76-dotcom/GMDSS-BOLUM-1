@@ -5,7 +5,7 @@ import time
 # --- SAYFA AYARLARI ---
 st.set_page_config(page_title="GMDSS Sınav Sistemi", page_icon="⚓", layout="centered")
 
-# --- ULTRA-KOMPAKT VE MODERN CSS ---
+# --- GELİŞMİŞ CSS ---
 st.markdown("""
     <style>
     .block-container { padding-top: 0.5rem; padding-bottom: 0rem; max-width: 800px; }
@@ -14,8 +14,29 @@ st.markdown("""
     
     .main-header { font-size: 24px !important; font-weight: 800; color: #FFFFFF; text-align: center; margin-bottom: 0px; }
     .serkan-hoca { font-size: 16px !important; font-weight: 600; color: #58a6ff; text-align: center; margin-top: -5px; margin-bottom: 10px; }
-    .question-header { font-size: 14px; color: #8b949e; text-align: center; margin-bottom: 5px; }
     
+    /* ANALİZ SAYFASI ÖZEL TASARIM */
+    .score-label { font-size: 22px; color: #8b949e; text-align: center; margin-bottom: -20px; font-weight: bold; }
+    .big-score {
+        font-size: 110px !important; /* DAHA BÜYÜK BAŞARI ORANI */
+        font-weight: 900;
+        color: #58a6ff;
+        text-align: center;
+        margin: 10px 0;
+        text-shadow: 2px 2px 10px rgba(88, 166, 255, 0.3);
+    }
+    .stats-container {
+        text-align: center;
+        font-size: 20px;
+        color: #ffffff;
+        margin-bottom: 20px;
+        background: #161B22;
+        padding: 15px;
+        border-radius: 10px;
+    }
+    .stat-correct { color: #238636; font-weight: bold; }
+    .stat-wrong { color: #da3633; font-weight: bold; }
+
     .question-box {
         background-color: #161B22;
         padding: 12px 18px;
@@ -25,16 +46,6 @@ st.markdown("""
         line-height: 1.4;
         margin-bottom: 10px;
     }
-    
-    /* Büyük Skor Yazısı */
-    .big-score {
-        font-size: 72px !important;
-        font-weight: 900;
-        color: #58a6ff;
-        text-align: center;
-        margin: 20px 0;
-    }
-    .score-label { font-size: 20px; color: #8b949e; text-align: center; margin-bottom: -10px; }
 
     /* Şık Butonları */
     .stButton>button {
@@ -47,13 +58,12 @@ st.markdown("""
         font-size: 14px;
         text-align: left;
         margin-bottom: -12px;
-        transition: 0.1s;
     }
     .stButton>button:hover { background-color: #3060d0; border-color: #58a6ff; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- VERİ SETİ (40 SORU TAMAMI) ---
+# --- VERİ SETİ (40 SORU) ---
 RAW_DATA = [
     {"q": "SÜZEN sözcüğü, uluslararası fonetik alfabesi ile nasıl kodlanır?", "a": "Sierra UniformZuluEchoNovember", "options": ["Sette Ultra ZuluEndoNovember", "South Ultra ZouluoEleven North", "Sierra UniformZuluEchoNovember", "Sierra UniformZuluEndoNove", "Sette UniformZouluoEicoNovember"]},
     {"q": "ETAT ücretli servis işaretinin anlamı nedir?", "a": "Devlet telgrafı", "options": ["Servis telgrafı", "Postrestant telgraf", "Denizcilikle ilgili telgraf", "Devlet telgrafı", "Acele telgraf"]},
@@ -97,8 +107,8 @@ RAW_DATA = [
     {"q": "GMDSS telsiz istasyonunun yedek enerji kaynağı (aküler) en az ne kadar süre çalışabilmelidir?", "a": "1 saat veya 6 saat (Acil jeneratör durumuna göre)", "options": ["1 saat veya 6 saat (Acil jeneratör durumuna göre)", "24 saat", "48 saat", "12 saat", "30 dakika"]}
 ]
 
-# --- DENGELİ DAĞILIM VE SİSTEM BAŞLATMA ---
-def init_quiz():
+# --- SİSTEM BAŞLATMA ---
+def build_quiz():
     shuffled = random.sample(RAW_DATA, len(RAW_DATA))
     slots = (["A"] * 8) + (["B"] * 8) + (["C"] * 8) + (["D"] * 8) + (["E"] * 8)
     random.shuffle(slots)
@@ -107,21 +117,21 @@ def init_quiz():
         correct = item["a"]
         wrongs = [o for o in item["options"] if o != correct]
         random.shuffle(wrongs)
-        final_opts = [None] * 5
-        target_idx = ord(slots[i]) - 65
-        final_opts[target_idx] = correct
+        f_opts = [None] * 5
+        t_idx = ord(slots[i]) - 65
+        f_opts[t_idx] = correct
         w_ptr = 0
         for j in range(5):
-            if final_opts[j] is None:
-                final_opts[j] = wrongs[w_ptr]
+            if f_opts[j] is None:
+                f_opts[j] = wrongs[w_ptr]
                 w_ptr += 1
         item_copy = item.copy()
-        item_copy["options"] = final_opts
+        item_copy["options"] = f_opts
         quiz.append(item_copy)
     return quiz
 
 if 'quiz' not in st.session_state:
-    st.session_state.quiz = init_quiz()
+    st.session_state.quiz = build_quiz()
     st.session_state.idx = 0
     st.session_state.results = []
     st.session_state.done = False
@@ -138,7 +148,7 @@ if not st.session_state.done:
 
     letters = ["A", "B", "C", "D", "E"]
     for i, opt in enumerate(curr["options"]):
-        if st.button(f"{letters[i]}) {opt}", key=f"btn_{st.session_state.idx}_{i}"):
+        if st.button(f"{letters[i]}) {opt}", key=f"q_{st.session_state.idx}_{i}"):
             st.session_state.results.append({"n": st.session_state.idx + 1, "q": curr["q"], "u": opt, "c": curr["a"]})
             if st.session_state.idx + 1 < len(RAW_DATA):
                 st.session_state.idx += 1
@@ -149,31 +159,36 @@ if not st.session_state.done:
                 st.rerun()
 
     st.divider()
-    if st.button("🏠 Sınavı Sıfırla", use_container_width=True):
+    if st.button("🏠 Sınavı Sıfırla"):
         st.session_state.clear()
         st.rerun()
 
 else:
     # --- ANALİZ SAYFASI ---
-    elapsed_time = st.session_state.end_time - st.session_state.start_time
-    minutes = int(elapsed_time // 60)
-    seconds = int(elapsed_time % 60)
+    elapsed = st.session_state.end_time - st.session_state.start_time
+    m, s = int(elapsed // 60), int(elapsed % 60)
     
     corrects = sum(1 for r in st.session_state.results if r["u"] == r["c"])
+    wrongs = len(RAW_DATA) - corrects
     score = (corrects / len(RAW_DATA)) * 100
 
     st.markdown('<p class="score-label">BAŞARI ORANI</p>', unsafe_allow_html=True)
     st.markdown(f'<p class="big-score">%{score:.1f}</p>', unsafe_allow_html=True)
     
-    st.markdown(f"<h3 style='text-align: center; color: #8b949e;'>⏱ Toplam Süre: {minutes} dk {seconds} sn</h3>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center;'>40 Soruda {corrects} Doğru Cevap</p>", unsafe_allow_html=True)
+    # Yeni İstatistik Tasarımı
+    st.markdown(f"""
+    <div class="stats-container">
+        ⏱ <b>Süre:</b> {m} dk {s} sn <br>
+        <span class="stat-correct">DOĞRU: {corrects}</span> | <span class="stat-wrong">YANLIŞ: {wrongs}</span>
+    </div>
+    """, unsafe_allow_html=True)
     
     if score >= 80: st.balloons()
 
-    st.subheader("Hata Analizi")
+    st.subheader("Yanlış Cevaplar")
     for r in st.session_state.results:
         if r["u"] != r["c"]:
-            with st.expander(f"Soru {r['n']} - Hatalı ❌"):
+            with st.expander(f"Soru {r['n']} - İncele"):
                 st.write(f"**Soru:** {r['q']}")
                 st.error(f"Senin Cevabın: {r['u']}")
                 st.success(f"Doğru Cevap: {r['c']}")
