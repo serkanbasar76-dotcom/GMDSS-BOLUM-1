@@ -15,24 +15,28 @@ st.markdown("""
     .main-header { font-size: 24px !important; font-weight: 800; color: #FFFFFF; text-align: center; margin-bottom: 0px; }
     .serkan-hoca { font-size: 16px !important; font-weight: 600; color: #58a6ff; text-align: center; margin-top: -5px; margin-bottom: 10px; }
     
-    /* ANALİZ SAYFASI ÖZEL TASARIM */
-    .score-label { font-size: 22px; color: #8b949e; text-align: center; margin-bottom: -20px; font-weight: bold; }
-    .big-score {
-        font-size: 110px !important; /* DAHA BÜYÜK BAŞARI ORANI */
+    /* ANALİZ SAYFASI YENİ TASARIM */
+    .result-container {
+        text-align: center;
+        padding: 20px 0;
+        margin-top: 10px;
+    }
+    .big-result {
+        font-size: 85px !important; /* ÇOK BÜYÜK YÜZDE VE DURUM */
         font-weight: 900;
         color: #58a6ff;
-        text-align: center;
-        margin: 10px 0;
-        text-shadow: 2px 2px 10px rgba(88, 166, 255, 0.3);
+        text-transform: uppercase;
+        line-height: 1.1;
     }
     .stats-container {
         text-align: center;
-        font-size: 20px;
+        font-size: 22px;
         color: #ffffff;
-        margin-bottom: 20px;
+        margin: 20px auto;
         background: #161B22;
         padding: 15px;
-        border-radius: 10px;
+        border-radius: 12px;
+        max-width: 500px;
     }
     .stat-correct { color: #238636; font-weight: bold; }
     .stat-wrong { color: #da3633; font-weight: bold; }
@@ -54,7 +58,7 @@ st.markdown("""
         border: 1px solid #3060d0;
         background-color: #1c2128;
         color: #FFFFFF;
-        padding: 6px 12px;
+        padding: 7px 12px;
         font-size: 14px;
         text-align: left;
         margin-bottom: -12px;
@@ -108,7 +112,7 @@ RAW_DATA = [
 ]
 
 # --- SİSTEM BAŞLATMA ---
-def build_quiz():
+def init_exam():
     shuffled = random.sample(RAW_DATA, len(RAW_DATA))
     slots = (["A"] * 8) + (["B"] * 8) + (["C"] * 8) + (["D"] * 8) + (["E"] * 8)
     random.shuffle(slots)
@@ -131,7 +135,7 @@ def build_quiz():
     return quiz
 
 if 'quiz' not in st.session_state:
-    st.session_state.quiz = build_quiz()
+    st.session_state.quiz = init_exam()
     st.session_state.idx = 0
     st.session_state.results = []
     st.session_state.done = False
@@ -142,7 +146,7 @@ st.markdown('<p class="main-header">GMDSS SORULARI</p>', unsafe_allow_html=True)
 st.markdown('<p class="serkan-hoca">⚓ SERKAN HOCA İLE</p>', unsafe_allow_html=True)
 
 if not st.session_state.done:
-    st.markdown(f'<p class="question-header">SORU {st.session_state.idx + 1} / {len(RAW_DATA)}</p>', unsafe_allow_html=True)
+    st.markdown(f'<p style="text-align:center; color:#8b949e; font-size:14px;">SORU {st.session_state.idx + 1} / {len(RAW_DATA)}</p>', unsafe_allow_html=True)
     curr = st.session_state.quiz[st.session_state.idx]
     st.markdown(f'<div class="question-box">{curr["q"]}</div>', unsafe_allow_html=True)
 
@@ -171,28 +175,37 @@ else:
     corrects = sum(1 for r in st.session_state.results if r["u"] == r["c"])
     wrongs = len(RAW_DATA) - corrects
     score = (corrects / len(RAW_DATA)) * 100
-
-    st.markdown('<p class="score-label">BAŞARI ORANI</p>', unsafe_allow_html=True)
-    st.markdown(f'<p class="big-score">%{score:.1f}</p>', unsafe_allow_html=True)
     
-    # Yeni İstatistik Tasarımı
+    # Dinamik Başarı İfadesi
+    status_text = "BAŞARILI" if score >= 80 else "GELİŞTİRİLMELİ"
+    status_color = "#238636" if score >= 80 else "#da3633"
+
+    # Büyük Sonuç Ekranı
+    st.markdown(f"""
+    <div class="result-container">
+        <div class="big-result">%{score:.1f} <span style="color:{status_color};">{status_text}</span></div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # İstatistik Paneli
     st.markdown(f"""
     <div class="stats-container">
-        ⏱ <b>Süre:</b> {m} dk {s} sn <br>
-        <span class="stat-correct">DOĞRU: {corrects}</span> | <span class="stat-wrong">YANLIŞ: {wrongs}</span>
+        ⏱ {m} dk {s} sn &nbsp; | &nbsp; 
+        <span class="stat-correct">DOĞRU: {corrects}</span> &nbsp; | &nbsp; 
+        <span class="stat-wrong">YANLIŞ: {wrongs}</span>
     </div>
     """, unsafe_allow_html=True)
     
     if score >= 80: st.balloons()
 
-    st.subheader("Yanlış Cevaplar")
+    st.subheader("Hatalı Sorular")
     for r in st.session_state.results:
         if r["u"] != r["c"]:
-            with st.expander(f"Soru {r['n']} - İncele"):
+            with st.expander(f"Soru {r['n']} - Hatalı"):
                 st.write(f"**Soru:** {r['q']}")
                 st.error(f"Senin Cevabın: {r['u']}")
                 st.success(f"Doğru Cevap: {r['c']}")
                 
-    if st.button("Sınava Baştan Başla", use_container_width=True):
+    if st.button("Sınava Yeniden Başla", use_container_width=True):
         st.session_state.clear()
         st.rerun()
