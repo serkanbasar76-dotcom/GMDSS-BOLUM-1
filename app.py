@@ -9,7 +9,7 @@ st.markdown("""
     <style>
     .stApp { background-color: #f4f7f9; }
     .stButton>button {
-        width: 80%;
+        width: 150%;
         border-radius: 12px;
         border: 1px solid #1e3a8a;
         background-color: white;
