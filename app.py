@@ -2,60 +2,56 @@ import streamlit as st
 import random
 
 # --- SAYFA AYARLARI ---
-st.set_page_config(page_title="GMDSS Portal", page_icon="⚓", layout="centered")
+st.set_page_config(page_title="GMDSS Sınav Sistemi", page_icon="⚓", layout="centered")
 
-# --- UI OPTİMİZASYONU (EKRANA SIĞDIRMA VE DARK MOD) ---
+# --- ULTRA KOMPAKT CSS ---
 st.markdown("""
     <style>
-    /* Streamlit üst boşlukları kaldır */
-    .block-container { padding-top: 1rem; padding-bottom: 0rem; max-width: 95%; }
+    .block-container { padding-top: 0.5rem; padding-bottom: 0rem; max-width: 900px; }
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
-
-    /* Arka Plan */
-    .stApp { background-color: #0E1117; color: #FFFFFF; }
     
-    /* Logo ve Başlık */
+    .stApp { background-color: #0E1117; color: #FFFFFF; font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; }
+    
     .serkan-hoca {
-        font-size: 24px !important;
+        font-size: 22px !important;
         font-weight: 800;
         color: #58a6ff;
         text-align: center;
-        margin-bottom: 5px;
+        margin-bottom: 2px;
     }
 
-    /* Soru Sayacı */
-    .counter {
+    .question-header {
+        font-size: 16px;
+        font-weight: bold;
         color: #8b949e;
         text-align: center;
-        font-size: 14px;
         margin-bottom: 5px;
     }
 
-    /* Soru Metni - Kompakt */
     .question-box {
         background-color: #161B22;
-        padding: 12px;
+        padding: 10px 15px;
         border-radius: 8px;
-        border-left: 4px solid #58a6ff;
-        font-size: 15px;
-        margin-bottom: 10px;
-        line-height: 1.4;
+        border-left: 5px solid #58a6ff;
+        font-size: 14px;
+        margin-bottom: 8px;
+        line-height: 1.3;
     }
 
-    /* Butonlar - Ekranı Kaplamayan ve İnce */
+    /* Şık Butonları - Kompakt ve Harf Etiketli */
     .stButton>button {
         width: 100%;
-        border-radius: 6px;
+        border-radius: 5px;
         border: 1px solid #3060d0;
         background-color: #1c2128;
         color: #FFFFFF;
-        padding: 6px 10px; 
-        margin-bottom: 0px;
+        padding: 4px 10px;
+        margin-bottom: -10px;
         font-size: 13px;
         text-align: left;
-        transition: 0.2s;
+        transition: 0.1s;
     }
     .stButton>button:hover {
         background-color: #3060d0;
@@ -64,8 +60,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- VERİ SETİ (40 SORU - TÜMÜ) ---
-# Not: Hız ve performans için sadece şık metinlerini ve doğru cevabı tutuyoruz.
+# --- VERİ SETİ (40 SORU TAM LİSTE) ---
 RAW_DATA = [
     {"q": "SÜZEN sözcüğü, uluslararası heceleme (fonetik) alfabesi ile nasıl kodlanır?", "a": "Sierra UniformZuluEchoNovember", "options": ["Sette Ultra ZuluEndoNovember", "South Ultra ZouluoEleven North", "Sierra UniformZuluEchoNovember", "Sierra UniformZuluEndoNove", "Sette UniformZouluoEicoNovember"]},
     {"q": "ETAT ücretli servis işaretinin anlamı nedir?", "a": "Devlet telgrafı", "options": ["Servis telgrafı", "Postrestant telgraf", "Denizcilikle ilgili telgraf", "Devlet telgrafı", "Acele telgraf"]},
@@ -77,7 +72,6 @@ RAW_DATA = [
     {"q": "Mevcut Cospas-Sarsat sisteminin bir sonraki nesli hangisidir?", "a": "MEOSAR", "options": ["SZNSAR", "GENSAR", "OTSSAR", "AISSAR", "MEOSAR"]},
     {"q": "AIS 1 kanalının frekansı nedir?", "a": "161.975 MHz", "options": ["156.825 MHz", "161.975 MHz", "162.025 MHz", "156.525 MHz", "156.300 MHz"]},
     {"q": "Tıbbi yardım talebi mesajları hangi öncelik derecesiyle gönderilir?", "a": "Urgency", "options": ["Distress", "Urgency", "Safety", "Routine", "Security"]},
-    # ... (Diğer sorular yukarıdaki 40'lı listeden aynı mantıkla devam eder)
     {"q": "VHF Kanal 70 hangi amaçla kullanılır?", "a": "Dijital Seçmeli Çağrı (DSC)", "options": ["Sesli tehlike çağrısı", "Liman kontrol", "Dijital Seçmeli Çağrı (DSC)", "Meteoroloji", "Gemi içi haberleşme"]},
     {"q": "Navtex cihazı hangi frekanstan uluslararası (İngilizce) yayınları alır?", "a": "518 kHz", "options": ["490 kHz", "518 kHz", "2182 kHz", "4209.5 kHz", "156.8 MHz"]},
     {"q": "GMDSS sisteminde A3 deniz bölgesi neyi tanımlar?", "a": "Inmarsat uydularının kapsama alanı", "options": ["Sadece VHF sahası", "Sadece MF sahası", "Inmarsat uydularının kapsama alanı", "Kutup bölgeleri", "Liman sahaları"]},
@@ -110,69 +104,73 @@ RAW_DATA = [
     {"q": "Telsiz operatörü DSC test çağrısını kime yapar?", "a": "Sahil istasyonuna (RCC)", "options": ["Herhangi bir gemiye", "Sahil istasyonuna (RCC)", "Kendi gemisine", "Tanıdık bir tekneye", "Test çağrısı yapılmaz"]}
 ]
 
-# --- SESSION STATE ---
-if 'quiz' not in st.session_state:
-    questions = random.sample(RAW_DATA, len(RAW_DATA))
-    for item in questions:
+# --- SİSTEM BAŞLATMA ---
+if 'quiz_state' not in st.session_state:
+    shuffled_questions = random.sample(RAW_DATA, len(RAW_DATA))
+    for item in shuffled_questions:
         random.shuffle(item["options"]) # Şıkları karıştır
-    st.session_state.quiz = questions
+    st.session_state.quiz_state = shuffled_questions
     st.session_state.idx = 0
-    st.session_state.results = []
-    st.session_state.done = False
+    st.session_state.user_results = []
+    st.session_state.is_done = False
 
-# --- UI GÖSTERİM ---
+# --- ARA YÜZ ---
 st.markdown('<p class="serkan-hoca">⚓ SERKAN HOCA İLE</p>', unsafe_allow_html=True)
 
-def restart_quiz():
+def reset():
     st.session_state.clear()
     st.rerun()
 
-if not st.session_state.done:
-    # Kompakt Üst Alan
-    st.markdown(f'<p class="counter">Soru {st.session_state.idx + 1} / {len(RAW_DATA)}</p>', unsafe_allow_html=True)
+if not st.session_state.is_done:
+    # Üst Bilgi: SORU 1/40
+    st.markdown(f'<p class="question-header">SORU {st.session_state.idx + 1} / {len(RAW_DATA)}</p>', unsafe_allow_html=True)
     
-    curr = st.session_state.quiz[st.session_state.idx]
-    # Soru başına numara ekleme
-    st.markdown(f'<div class="question-box">{st.session_state.idx + 1}. SORU: {curr["q"]}</div>', unsafe_allow_html=True)
+    current_q = st.session_state.quiz_state[st.session_state.idx]
+    
+    # Soru Kutusu
+    st.markdown(f'<div class="question-box">{current_q["q"]}</div>', unsafe_allow_html=True)
 
-    # Şıklar - Dikey alanı korumak için 
-    for opt in curr["options"]:
-        if st.button(opt):
-            st.session_state.results.append({
+    # Şıklar (A, B, C, D, E otomatik eklenir)
+    letters = ["A", "B", "C", "D", "E"]
+    for i, opt in enumerate(current_q["options"]):
+        # Harf + Şık metni
+        label = f"{letters[i]}) {opt}"
+        if st.button(label, key=f"btn_{st.session_state.idx}_{i}"):
+            st.session_state.user_results.append({
                 "num": st.session_state.idx + 1,
-                "question": curr["q"],
-                "given": opt,
-                "correct": curr["a"]
+                "question": current_q["q"],
+                "user_choice": opt,
+                "correct_choice": current_q["a"]
             })
             if st.session_state.idx + 1 < len(RAW_DATA):
                 st.session_state.idx += 1
             else:
-                st.session_state.done = True
+                st.session_state.is_done = True
             st.rerun()
 
-    # Alt Menü - Çok az yer kaplar
-    st.write("")
+    # Alt Navigasyon
+    st.divider()
     c1, c2 = st.columns(2)
-    if c1.button("🏠 Kapat/Sıfırla", use_container_width=True): restart_quiz()
-    if c2.button("💾 Devam Et", use_container_width=True): st.toast("Kaldığınız yer korundu.")
+    if c1.button("🏠 Kapat / Başa Dön", use_container_width=True): reset()
+    if c2.button("💾 Kaldığım Yerden", use_container_width=True): st.toast("Sistem kaydedildi.")
 
 else:
-    # --- ANALİZ ---
-    correct_total = sum(1 for r in st.session_state.results if r["given"] == r["correct"])
-    score = (correct_total / len(RAW_DATA)) * 100
+    # --- ANALİZ EKRANI ---
+    corrects = sum(1 for r in st.session_state.user_results if r["user_choice"] == r["correct_choice"])
+    score_val = (corrects / len(RAW_DATA)) * 100
 
-    if score >= 80:
+    if score_val >= 80:
         st.balloons()
-        st.success("# TEBRİKLER HARİKASIN! 🚀")
+        st.success(f"# TEBRİKLER HARİKASIN! 🚀 \n Başarı Oranı: %{score_val:.1f}")
+    else:
+        st.warning(f"Sınav Tamamlandı. Başarı Oranı: %{score_val:.1f}")
     
-    st.metric("BAŞARI ORANI", f"%{score:.1f}")
-    
-    for res in st.session_state.results:
-        is_correct = res["given"] == res["correct"]
-        if not is_correct:
-            with st.expander(f"Soru {res['num']}: ❌"):
+    st.subheader("Hata Analizi (Yanlış Cevaplar)")
+    for res in st.session_state.user_results:
+        if res["user_choice"] != res["correct_choice"]:
+            with st.expander(f"Soru {res['num']} - Yanlış ❌"):
                 st.write(f"**Soru:** {res['question']}")
-                st.error(f"Senin Cevabın: {res['given']}")
-                st.success(f"Doğru Cevap: {res['correct']}")
+                st.error(f"Sizin Cevabınız: {res['user_choice']}")
+                st.success(f"Doğru Cevap: {res['correct_choice']}")
                 
-    if st.button("Yeniden Başla"): restart_quiz()
+    if st.button("Sınava Baştan Başla", use_container_width=True): reset()
